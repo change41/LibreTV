@@ -153,6 +153,8 @@ function validateProxyAuth(req) {
 }
 
 app.get('/proxy/:encodedUrl', async (req, res) => {
+  // 将targetUrl声明移到try块外面，确保在catch块中可以访问
+  let targetUrl;
   try {
     // 验证鉴权
     if (!validateProxyAuth(req)) {
@@ -163,7 +165,7 @@ app.get('/proxy/:encodedUrl', async (req, res) => {
     }
 
     const encodedUrl = req.params.encodedUrl;
-    const targetUrl = decodeURIComponent(encodedUrl);
+    targetUrl = decodeURIComponent(encodedUrl);
 
     // 安全验证
     if (!isValidUrl(targetUrl)) {
@@ -212,7 +214,8 @@ app.get('/proxy/:encodedUrl', async (req, res) => {
     // 管道传输响应流
     response.data.pipe(res);
   } catch (error) {
-    console.error('代理请求错误:', error.message);
+    // 在错误消息中包含目标URL
+    console.error('代理请求错误:', error.message, '| 目标URL:', targetUrl);
     if (error.response) {
       res.status(error.response.status || 500);
       error.response.data.pipe(res);
